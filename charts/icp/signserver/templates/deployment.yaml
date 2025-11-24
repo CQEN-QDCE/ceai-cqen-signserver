@@ -40,7 +40,7 @@ spec:
               value: {{ .Values.DATABASE_DRIVER }}
             # Variáveis para o script de setup
             - name: ADMIN_DN
-              value: {{ .Values.security.adminDn | quote }}
+              value: {{ .Values.adminDn | quote }}
           # --- ADICIONE ESTAS PROBES ---
           # Verifica se o WildFly está vivo (para não reiniciar o container à toa)
           livenessProbe:
