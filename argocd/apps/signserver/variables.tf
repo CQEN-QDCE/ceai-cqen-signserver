@@ -89,7 +89,7 @@ variable "DATABASE_PASSWORD" {
   sensitive   = true
 }
 
-variable "admin_dn" {
+variable "adminDn" {
   description = "Le DN (Distinguished Name) EXACT de votre certificat numérique d'administrateur."
   type        = string
 }

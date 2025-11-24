@@ -35,12 +35,8 @@ DATABASE_JDBC_URL: ''
 DATABASE_USER: ''
 DATABASE_PASSWORD: ''
 DATABASE_DRIVER: 'org.postgresql.Driver'
-
-# Sécurité et contrôle d'accès 
-security:
-  # O DN (Distinguished Name) EXACT de votre certificat numérique d'administrateur.
-  adminDn: ""
-  
-  # Collez ici le contenu du certificat de l'AC (au format PEM) qui a émis votre certificat.
-  # WildFly utilisera cela pour faire confiance à votre certificat client.
-  adminCaCert: ""
+# O DN (Distinguished Name) EXACT de votre certificat numérique d'administrateur.
+adminDn: ''
+# Collez ici le contenu du certificat de l'AC (au format PEM) qui a émis votre certificat.
+# WildFly utilisera cela pour faire confiance à votre certificat client.
+adminCaCert: ''
