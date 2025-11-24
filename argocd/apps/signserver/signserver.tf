@@ -41,7 +41,6 @@ resource "kubernetes_manifest" "signserver_app_of_apps" {
                 DATABASE_JDBC_URL = var.DATABASE_JDBC_URL
                 DATABASE_USER     = var.DATABASE_USER
                 DATABASE_PASSWORD = var.DATABASE_PASSWORD
-                LD_BIND_NOW = 1
               }
             }
           })
