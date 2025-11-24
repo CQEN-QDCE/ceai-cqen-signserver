@@ -21,8 +21,8 @@ service:
     service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold: "2"
     service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold: "2"
     service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval: "10"
-  httpPort: 80
-  httpsPort: 443
+  httpPort: 8082
+  httpsPort: 8444
 
 persistence:
   enabled: true

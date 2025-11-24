@@ -61,8 +61,5 @@ resource "kubernetes_manifest" "signserver_app_of_apps" {
       }
     }
   } 
-  /*depends_on = [
-    kubernetes_manifest.argocd_project
-  ]*/
 }
 
