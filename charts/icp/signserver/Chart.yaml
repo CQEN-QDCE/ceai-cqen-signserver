@@ -1,0 +1,6 @@
+apiVersion: v2
+name: signserver-tsa
+description: Deployment do SignServer CE com TSA pré-configurado para AWS
+type: application
+version: 1.0.0
+appVersion: "5.0" # Versão aproximada do CE

@@ -1,0 +1,17 @@
+cluster_name                    = 
+environment                     = 
+
+aws_profile                     = 
+cluster_region                  = 
+assume_role_arn                 = 
+
+repo_github_url                 = 
+target_revision                 = 
+chart_path                      = 
+server_image                    = 
+image_tag                       = 
+acm_certificate_arn             = 
+
+DATABASE_JDBC_URL               = 
+DATABASE_USER                   = 
+DATABASE_PASSWORD               =  

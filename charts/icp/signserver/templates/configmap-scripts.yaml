@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "signserver.fullname" . }}-scripts
+  labels:
+    app: {{ include "signserver.name" . }}
+data:
+  setup-full.sh: |
+    #!/bin/bash
+    JBOSS_HOME=/opt/primekey/wildfly
+    SS_BIN=/opt/primekey/signserver/bin/signserver
+    JBOSS_CLI=$JBOSS_HOME/bin/jboss-cli.sh
+    TRUSTSTORE_PATH=$JBOSS_HOME/standalone/configuration/truststore.jks
+    TRUSTSTORE_PASS="changeit"
+    
+    echo "--- [1/5] Aguardando WildFly iniciar... ---"
+    until grep -q "WildFly.*started in" $JBOSS_HOME/standalone/log/server.log; do sleep 5; done
+    
+    echo "--- [2/5] Configurando Truststore com CA do Admin ---"
+    if [ ! -f "$TRUSTSTORE_PATH" ]; then
+        # Copia o cacerts do Java se não existir truststore específico
+        cp $JAVA_HOME/lib/security/cacerts $TRUSTSTORE_PATH
+        chmod 664 $TRUSTSTORE_PATH
+    fi
+    
+    # Importa a CA montada pelo Secret no Truststore
+    # "yes" envia confirmação para o keytool
+    echo "yes" | keytool -import -alias adminCA -file /opt/primekey/custom_config/admin-ca.crt -keystore $TRUSTSTORE_PATH -storepass $TRUSTSTORE_PASS -noprompt || true
+    
+    echo "--- [3/5] Configurando WildFly para Autenticação Mútua (mTLS) ---"
+    # Script CLI para alterar a configuração do subsistema Elytron/Web
+    $JBOSS_CLI --connect --command="/subsystem=elytron/key-store=applicationKS:write-attribute(name=path, value=$TRUSTSTORE_PATH)"
+    $JBOSS_CLI --connect --command="/subsystem=elytron/key-store=applicationKS:write-attribute(name=credential-reference, value={clear-text=\"$TRUSTSTORE_PASS\"})"
+    
+    # Força a verificação do cliente na porta HTTPS (assume configuração padrão do standalone.xml da PrimeKey)
+    # CLIENT_CERT configura para REQUEST ou REQUIRED dependendo da versão, mas garante o handshake
+    $JBOSS_CLI --connect --command="/subsystem=undertow/server=default-server/https-listener=https:write-attribute(name=verify-client, value=REQUIRED)"
+    
+    # Recarrega o WildFly para aplicar SSL
+    $JBOSS_CLI --connect --command=":reload"
+    
+    echo "--- [4/5] Aguardando reload... ---"
+    sleep 20
+    until $JBOSS_CLI --connect --command=":read-attribute(name=server-state)" | grep -q "running"; do sleep 5; done
+    
+    echo "--- [5/5] Configurando Aplicação SignServer (TSA e Admin) ---"
+    
+    # Configura TSA (Script anterior)
+    if ! $SS_BIN getstatus | grep -q "TSAWorker"; then
+        $SS_BIN setproperties /opt/primekey/scripts/tsa-token.properties
+        $SS_BIN reload 1
+        $SS_BIN generatekeys CryptoToken01 "TSAKey" "RSA" "4096"
+        $SS_BIN setproperties /opt/primekey/scripts/tsa-worker.properties
+        $SS_BIN reload 2
+    fi
+    
+    # Autoriza o Administrador pelo Certificado
+    echo "--- Adicionando AdminDN: $ADMIN_DN ---"
+    # Adiciona o certificado como superadministrador
+    $SS_BIN admins -add "$ADMIN_DN" "Super Administrator"
+    
+    echo "--- SETUP COMPLETO! ---"
+
+  tsa-token.properties: |
+    WORKERGENID1.TYPE=CRYPTOTOKEN
+    WORKERGENID1.IMPLEMENTATION_CLASS=org.signserver.server.cryptotokens.SoftCryptoToken
+    WORKERGENID1.NAME=CryptoToken01
+    WORKERGENID1.KEYSTOREPATH=/opt/primekey/signserver/custom_data/tsa-keystore.p12
+    WORKERGENID1.KEYSTOREPASSWORD=signserver123
+    WORKERGENID1.AUTACTIVATION=true
+
+  tsa-worker.properties: |
+    WORKERGENID2.TYPE=WORKER
+    WORKERGENID2.IMPLEMENTATION_CLASS=org.signserver.module.tsa.worker.TimeStampSigner
+    WORKERGENID2.NAME=TSAWorker
+    WORKERGENID2.AUTHTYPE=NOAUTH
+    WORKERGENID2.CRYPTOTOKEN=CryptoToken01
+    WORKERGENID2.DEFAULTKEY=TSAKey
+    WORKERGENID2.SIGNATUREALGORITHM=SHA256WithRSA

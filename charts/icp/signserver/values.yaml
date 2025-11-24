@@ -1,0 +1,39 @@
+image:
+  repository: primekey/signserver-ce
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: LoadBalancer
+  # Usar NLB é importante para fazer "TCP Passthrough", permitindo que o 
+  # SignServer valide o certificado do cliente, e não o LoadBalancer da AWS.
+  annotations: 
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  httpPort: 80
+  httpsPort: 443
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: gp2
+
+# Config de la connection à la BD (AWS RDS)
+
+DATABASE_JDBC_URL: '' 
+DATABASE_USER: ''
+DATABASE_PASSWORD: ''
+DATABASE_DRIVER: 'org.postgresql.Driver'
+LD_BIND_NOW: 1
+
+
+
+# Sécurité et contrôle d'accès 
+security:
+  # O DN (Distinguished Name) EXACT de votre certificat numérique d'administrateur.
+  adminDn: ""
+  
+  # Collez ici le contenu du certificat de l'AC (au format PEM) qui a émis votre certificat.
+  # WildFly utilisera cela pour faire confiance à votre certificat client.
+  adminCaCert: ""

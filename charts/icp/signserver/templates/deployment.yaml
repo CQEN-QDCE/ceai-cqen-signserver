@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "signserver.fullname" . }}
+  labels:
+    app: {{ include "signserver.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "signserver.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "signserver.name" . }}
+    spec:
+      containers:
+        - name: signserver
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          lifecycle:
+            postStart:
+              exec:
+                # Executa o script de configuração (TSA + mTLS) em background
+                command: ["/bin/bash", "-c", "nohup /opt/primekey/scripts/setup-full.sh > /tmp/setup.log 2>&1 &"]
+          ports:
+            - containerPort: 8080
+            - containerPort: 8443
+          env:
+            # Configurações do Banco de Dados RDS
+            - name: DATABASE_JDBC_URL
+              value: {{ .Values.DATABASE_JDBC_URL }}
+            - name: DATABASE_USER
+              value: {{ .Values.DATABASE_USER }}
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "signserver.fullname" . }}-secrets
+                  key: db-password
+            - name: DATABASE_DRIVER
+              value: {{ .Values.DATABASE_DRIVER }}
+            # Variáveis para o script de setup
+            - name: ADMIN_DN
+              value: {{ .Values.security.adminDn | quote }}
+          volumeMounts:
+            - name: scripts
+              mountPath: /opt/primekey/scripts
+            - name: data
+              mountPath: /opt/primekey/signserver/custom_data
+            - name: ca-cert
+              mountPath: /opt/primekey/custom_config/admin-ca.crt
+              subPath: admin-ca.crt
+      volumes:
+        - name: scripts
+          configMap:
+            name: {{ include "signserver.fullname" . }}-scripts
+            defaultMode: 0777
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "signserver.fullname" . }}-pvc
+        - name: ca-cert
+          secret:
+            secretName: {{ include "signserver.fullname" . }}-secrets
