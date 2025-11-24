@@ -23,8 +23,8 @@ spec:
                 # Executa o script de configuração (TSA + mTLS) em background
                 command: ["/bin/bash", "-c", "nohup /opt/primekey/scripts/setup-full.sh > /tmp/setup.log 2>&1 &"]
           ports:
-            - containerPort: 8080
-            - containerPort: 8443
+            - containerPort: 8082
+            - containerPort: 8444
           env:
             # Configurações do Banco de Dados RDS
             - name: DATABASE_JDBC_URL
@@ -46,7 +46,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /signserver/healthcheck
-              port: 8080
+              port: 8082
             initialDelaySeconds: 180 # Dá 3 minutos para o Java subir antes de checar
             periodSeconds: 20
             failureThreshold: 3
@@ -55,11 +55,11 @@ spec:
           readinessProbe:
             httpGet:
               path: /signserver/healthcheck
-              port: 8080
+              port: 8082
             initialDelaySeconds: 60
             periodSeconds: 10
             failureThreshold: 10
-            
+
           volumeMounts:
             - name: scripts
               mountPath: /opt/primekey/scripts

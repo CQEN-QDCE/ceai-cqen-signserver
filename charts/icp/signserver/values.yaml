@@ -14,9 +14,9 @@ service:
     # --- ADICIONE ESTAS LINHAS ---
     # Define que o Health Check deve ser feito via TCP (apenas ver se a porta abre)
     service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: TCP
-    # Força o Health Check a ser feito na porta 8080 (HTTP normal),
+    # Força o Health Check a ser feito na porta 8082 (HTTP normal),
     # ignorando a exigência de certificado da porta 8443.
-    service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "8080"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "8082"
     # Aumenta a tolerância, pois o SignServer demora para subir
     service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold: "2"
     service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold: "2"
