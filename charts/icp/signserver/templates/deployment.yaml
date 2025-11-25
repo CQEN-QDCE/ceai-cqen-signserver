@@ -43,22 +43,22 @@ spec:
               value: {{ .Values.adminDn | quote }}
           # --- ADICIONE ESTAS PROBES ---
           # Verifica se o WildFly está vivo (para não reiniciar o container à toa)
-          livenessProbe:
-            httpGet:
-              path: /signserver/healthcheck
-              port: 8082
-            initialDelaySeconds: 180 # Dá 3 minutos para o Java subir antes de checar
-            periodSeconds: 20
-            failureThreshold: 3
+          #livenessProbe:
+          #  httpGet:
+          #    path: /signserver/healthcheck
+          #    port: 8082
+          #  initialDelaySeconds: 180 # Dá 3 minutos para o Java subir antes de checar
+          #  periodSeconds: 20
+          #  failureThreshold: 3
 
           # Verifica se o SignServer já pode receber tráfego (só libera pro NLB quando OK)
-          readinessProbe:
-            httpGet:
-              path: /signserver/healthcheck
-              port: 8082
-            initialDelaySeconds: 60
-            periodSeconds: 10
-            failureThreshold: 10
+          #readinessProbe:
+          #  httpGet:
+          #    path: /signserver/healthcheck
+          #    port: 8082
+          #  initialDelaySeconds: 60
+          #  periodSeconds: 10
+          #  failureThreshold: 10
 
           volumeMounts:
             - name: scripts
